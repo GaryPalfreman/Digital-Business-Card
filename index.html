@@ -97,7 +97,6 @@
     </section>
 
     <div class="controls" aria-label="Contact Gary">
-      <button id="flipBtn" type="button">Flip card</button>
       <a class="btn" href="mailto:gpalfreman@geicp.com">Email</a>
       <a class="btn" href="tel:+61393201111">Call</a>
       <a class="btn" href="https://www.linkedin.com/in/gary-p-7976b2ba" target="_blank" rel="noopener noreferrer">Connect LinkedIn</a>
@@ -110,7 +109,6 @@
     const card = document.getElementById('card');
     const cardImage = document.getElementById('cardImage');
     const scene = document.getElementById('scene');
-    const flipBtn = document.getElementById('flipBtn');
     let showingBack = false;
     let flipping = false;
 
@@ -129,7 +127,6 @@
       setTimeout(() => { flipping = false; }, 460);
     }
     scene.addEventListener('click', flip);
-    flipBtn.addEventListener('click', flip);
 
     // One tasteful automatic demonstration only.
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
