@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#eef4f7" />
+  <title>Gary Palfreman — Digital Business Card</title>
+  <style>
+    :root{
+      --bg1:#f6f9fb;
+      --bg2:#e8f0f5;
+      --ink:#102332;
+      --muted:#557080;
+      --accent:#1f6f93;
+    }
+    *{box-sizing:border-box}
+    html,body{min-height:100%;margin:0}
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.95), transparent 30%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .wrap{
+      width:min(100%, 760px);
+      display:grid;
+      gap:20px;
+      justify-items:center;
+    }
+    .eyebrow{
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .scene{
+      width:min(92vw, 720px);
+      aspect-ratio:85.60/53.98;
+      perspective:1600px;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .card{
+      position:relative;
+      width:100%;
+      height:100%;
+      transform-style:preserve-3d;
+      transition:transform .9s cubic-bezier(.2,.7,.2,1);
+      filter:drop-shadow(0 18px 35px rgba(14,36,52,.18));
+    }
+    .card.flipped{ transform:rotateY(180deg); }
+    .face{
+      position:absolute;
+      inset:0;
+      backface-visibility:hidden;
+      -webkit-backface-visibility:hidden;
+      overflow:hidden;
+      border-radius:4.9% / 7.7%;
+      background:white;
+    }
+    .face.back{ transform:rotateY(180deg); }
+    .face img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    button,a.btn{
+      appearance:none;
+      border:1px solid rgba(16,35,50,.14);
+      background:rgba(255,255,255,.85);
+      color:var(--ink);
+      padding:11px 16px;
+      border-radius:999px;
+      font:inherit;
+      cursor:pointer;
+      text-decoration:none;
+      backdrop-filter:blur(12px);
+      box-shadow:0 6px 18px rgba(16,35,50,.08);
+    }
+    button:hover,a.btn:hover{border-color:rgba(31,111,147,.35)}
+    .hint{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      text-align:center;
+      line-height:1.5;
+    }
+    dialog{
+      border:0;
+      border-radius:20px;
+      padding:22px;
+      width:min(92vw,420px);
+      box-shadow:0 24px 80px rgba(0,0,0,.25);
+      color:var(--ink);
+    }
+    dialog::backdrop{background:rgba(0,0,0,.35);backdrop-filter:blur(4px)}
+    #qr{display:block;margin:16px auto 10px}
+    .url{
+      font-size:12px;
+      color:var(--muted);
+      overflow-wrap:anywhere;
+      text-align:center;
+    }
+    .small{font-size:12px;color:var(--muted)}
+    @media (prefers-reduced-motion: reduce){
+      .card{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">Digital Business Card</div>
+
+    <section class="scene" id="scene" aria-label="Tap to flip business card">
+      <div class="card" id="card">
+        <div class="face front"><img src="front.png" alt="Front of Gary Palfreman business card"></div>
+        <div class="face back"><img src="back.png" alt="Back of Gary Palfreman business card"></div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button id="flipBtn" type="button">Flip card</button>
+      <button id="qrBtn" type="button">Show QR</button>
+      <a class="btn" href="mailto:gpalfreman@geicp.com">Email Gary</a>
+    </div>
+
+    <p class="hint">Tap the card to flip it. On first load it performs one automatic 3D turn, then stays under your control.</p>
+  </main>
+
+  <dialog id="qrDialog">
+    <strong>Scan to open this digital card</strong>
+    <canvas id="qr" width="260" height="260"></canvas>
+    <div class="url" id="pageUrl"></div>
+    <p class="small">The QR uses the live web address of this page, so it becomes fully scannable after the folder is hosted online.</p>
+    <div style="text-align:center;margin-top:14px"><button id="closeQr">Close</button></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script>
+    const card = document.getElementById('card');
+    const scene = document.getElementById('scene');
+    const flipBtn = document.getElementById('flipBtn');
+
+    function flip(){ card.classList.toggle('flipped'); }
+    scene.addEventListener('click', flip);
+    flipBtn.addEventListener('click', flip);
+
+    // One tasteful automatic demonstration only.
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setTimeout(() => card.classList.add('flipped'), 1100);
+      setTimeout(() => card.classList.remove('flipped'), 2600);
+    }
+
+    const dlg = document.getElementById('qrDialog');
+    const qrBtn = document.getElementById('qrBtn');
+    const closeQr = document.getElementById('closeQr');
+    const canvas = document.getElementById('qr');
+    const pageUrl = document.getElementById('pageUrl');
+
+    qrBtn.addEventListener('click', async () => {
+      const url = window.location.href;
+      pageUrl.textContent = url;
+      if (window.QRCode) {
+        await QRCode.toCanvas(canvas, url, {
+          width:260,
+          margin:2,
+          errorCorrectionLevel:'H'
+        });
+      }
+      dlg.showModal();
+    });
+    closeQr.addEventListener('click', () => dlg.close());
+  </script>
+</body>
+</html>
